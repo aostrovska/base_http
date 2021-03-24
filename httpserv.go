@@ -64,32 +64,6 @@ func GetId(o GeneralObject) string {
 	return ""
 }
 
-/*func Print (w http.ResponseWriter, obj GeneralObject){
-	switch obj.(type){
-		case "Teacher":
-			io.WriteString(w, obj.Data.ID)
-			io.WriteString(w, string(obj.Data.Salary))
-			io.WriteString(w, obj.Data.Subject)
-			io.WriteString(w, obj.Data.Classroom)
-			io.WriteString(w, obj.Person.Name)
-			io.WriteString(w, obj.Person.Surname)
-			io.WriteString(w, obj.Person.PersonalCode)
-		case "Stuff":
-			io.WriteString(w, obj.Data.ID)
-			io.WriteString(w, string(obj.Data.Salary))
-			io.WriteString(w, obj.Data.Classroom)
-			io.WriteString(w, obj.Person.Name)
-			io.WriteString(w, obj.Person.Surname)
-			io.WriteString(w, obj.Person.PersonalCode)
-		case "Student":
-			io.WriteString(w, obj.Data.ID)
-			io.WriteString(w, obj.Data.Class)
-			io.WriteString(w, obj.Person.Name)
-			io.WriteString(w, obj.Person.Surname)
-			io.WriteString(w, obj.Person.PersonalCode)
-
-			}
-}*/
 
 func (t Teacher) GetCreateAction() DefinedAction {
 	return &CreateTeacher{}
@@ -97,7 +71,7 @@ func (t Teacher) GetCreateAction() DefinedAction {
 func (t Teacher) GetUpdateAction() DefinedAction {
 	return &UpdateTeacher{}
 }
-func (t Teacher) GetReadAction() DefinedAction {
+func (t Teacher) GetReadAction() DefinedAction2 {
 	return &ReadTeacher{}
 }
 func (t Teacher) GetDeleteAction() DefinedAction {
@@ -110,7 +84,7 @@ func (s Stuff) GetCreateAction() DefinedAction {
 func (s Stuff) GetUpdateAction() DefinedAction {
 	return &UpdateStuff{}
 }
-func (s Stuff) GetReadAction() DefinedAction {
+func (s Stuff) GetReadAction() DefinedAction2 {
 	return &ReadStuff{}
 }
 func (s Stuff) GetDeleteAction() DefinedAction {
@@ -123,7 +97,7 @@ func (st Student) GetCreateAction() DefinedAction {
 func (st Student) GetUpdateAction() DefinedAction {
 	return &UpdateStudent{}
 }
-func (st Student) GetReadAction() DefinedAction {
+func (st Student) GetReadAction() DefinedAction2 {
 	return &ReadStudent{}
 }
 func (st Student) GetDeleteAction() DefinedAction {
@@ -135,10 +109,15 @@ type DefinedAction interface {
 	Process()
 }
 
+type DefinedAction2 interface {
+	GetFromJSON([]byte)
+	Process(http.ResponseWriter)
+}
+
 type GeneralObject interface {
 	GetCreateAction() DefinedAction
 	GetUpdateAction() DefinedAction
-	GetReadAction() DefinedAction
+	GetReadAction() DefinedAction2
 	GetDeleteAction() DefinedAction
 }
 
@@ -187,7 +166,7 @@ func (action *ReadTeacher) GetFromJSON(rawData []byte) {
 		return
 	}
 }
-func (action ReadTeacher, w http.ResponseWriter) Process() {
+func (action ReadTeacher) Process(w http.ResponseWriter) {
 	salary := fmt.Sprintf("%f", action.T.Salary)
 	for i := 0; i < len(obj_sl); i++ {
 		if action.T.ID == GetId(obj_sl[i]) {
@@ -258,9 +237,7 @@ func (action UpdateStuff) Process() {
 }
 
 type ReadStuff struct {
-	Data struct {
-		ID string `json:"id"`
-	} `json:"data"`
+	St Stuff `json:"data"`
 }
 
 func (action *ReadStuff) GetFromJSON(rawData []byte) {
@@ -270,15 +247,16 @@ func (action *ReadStuff) GetFromJSON(rawData []byte) {
 		return
 	}
 }
-func (action ReadStuff) Process() {
+func (action ReadStuff) Process(w http.ResponseWriter) {
+	salary := fmt.Sprintf("%f", action.St.Salary)
 	for i := 0; i < len(obj_sl); i++ {
-		if action.Data.ID == GetId(obj_sl[i]) {
-			io.WriteString(w, obj.Data.ID)
-			io.WriteString(w, string(obj.Data.Salary))
-			io.WriteString(w, obj.Data.Classroom)
-			io.WriteString(w, obj.Person.Name)
-			io.WriteString(w, obj.Person.Surname)
-			io.WriteString(w, obj.Person.PersonalCode)
+		if action.St.ID == GetId(obj_sl[i]) {
+			io.WriteString(w, action.St.ID)
+			io.WriteString(w, salary)
+			io.WriteString(w, action.St.Classroom)
+			io.WriteString(w, action.St.Person.Name)
+			io.WriteString(w, action.St.Person.Surname)
+			io.WriteString(w, action.St.Person.PersonalCode)
 		}
 	}
 }
@@ -339,9 +317,7 @@ func (action UpdateStudent) Process() {
 }
 
 type ReadStudent struct {
-	Data struct {
-		ID string `json:"id"`
-	} `json:"data"`
+	S Student `json:"data"`
 }
 
 func (action *ReadStudent) GetFromJSON(rawData []byte) {
@@ -351,14 +327,14 @@ func (action *ReadStudent) GetFromJSON(rawData []byte) {
 		return
 	}
 }
-func (action ReadStudent) Process() {
+func (action ReadStudent) Process(w http.ResponseWriter) {
 	for i := 0; i < len(obj_sl); i++ {
-		if action.Data.ID == GetId(obj_sl[i]) {
-			io.WriteString(w, obj.Data.ID)
-			io.WriteString(w, obj.Data.Class)
-			io.WriteString(w, obj.Person.Name)
-			io.WriteString(w, obj.Person.Surname)
-			io.WriteString(w, obj.Person.PersonalCode)
+		if action.S.ID == GetId(obj_sl[i]) {
+			io.WriteString(w, action.S.ID)
+			io.WriteString(w, action.S.Class)
+			io.WriteString(w, action.S.Person.Name)
+			io.WriteString(w, action.S.Person.Surname)
+			io.WriteString(w, action.S.Person.PersonalCode)
 		}
 	}
 }
@@ -397,6 +373,7 @@ func Handler(w http.ResponseWriter, req *http.Request) {
 
 	}
 	var toDo DefinedAction
+	var toDor DefinedAction2
 	if req.Method == "GET" {
 		for i := 0; i < len(obj_sl); i++{
 			io.WriteString(w, GetId(obj_sl[i]))
@@ -412,11 +389,11 @@ func Handler(w http.ResponseWriter, req *http.Request) {
 			case "create":
 				toDo = obj.GetCreateAction()
 				toDo.Process()
+				//fmt.Println(obj_sl)
 			case "read":
-				toDo = obj.GetReadAction()
-				toDo.Process()
+				toDor = obj.GetReadAction()
+				toDor.Process(w)
 		}
-		//io.WriteString(w, "successful post")
 	}else if req.Method == "PUT" {
 		switch act.Action {
 			case "update":
@@ -426,7 +403,7 @@ func Handler(w http.ResponseWriter, req *http.Request) {
 	}else {
 		w.WriteHeader(405)
 	}
-	
+	//io.WriteString(w, GetId(obj_sl[0]))
 }
 
 func main() {

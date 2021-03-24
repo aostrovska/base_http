@@ -11,10 +11,10 @@ func main() {
 	client := &http.Client{}
 	
 	var body bytes.Buffer
-	body.Write([]byte("Hello server!"))
+	body.Write([]byte("\"action\":\"create\",\"object\":\"Teacher\",\"data\":{\"id\":\"001\",\"subject\":\"Math\",\"salary\":2345,\"classroom\":\"CL-001\",\"person\":{\"name\":\"Ivan\",\"surname\":\"Popov\",\"personalCode\":\"123422-43235\"}"))
 	
-	req, err := http.NewRequest("GET", "http://localhost:8080/", &body)
-	
+	req, err := http.NewRequest("POST", "http://localhost:8080/", &body)
+	req, err = http.NewRequest("GET", "http://localhost:8080/", &body)
 	resp, err := client.Do(req)
 	if err != nil {panic(err) }
 	
