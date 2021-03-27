@@ -379,17 +379,26 @@ func Handler(w http.ResponseWriter, req *http.Request) {
 			io.WriteString(w, GetId(obj_sl[i]))
 			io.WriteString(w,"/n")
 		}
+		io.WriteString(w,"Bad ")
 	} else if req.Method == "POST" {
 		data, err := ioutil.ReadAll(req.Body)
 		req.Body.Close()
 		if err != nil {return }
 		
 		fmt.Printf("%s\n", data)
+		err = json.Unmarshal(data, &act)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+		io.WriteString(w," POST ")
 		switch act.Action {
 			case "create":
 				toDo = obj.GetCreateAction()
 				toDo.Process()
 				//fmt.Println(obj_sl)
+				io.WriteString(w, GetId(obj_sl[0]))
+				io.WriteString(w," very Bad ")
 			case "read":
 				toDor = obj.GetReadAction()
 				toDor.Process(w)
@@ -403,7 +412,6 @@ func Handler(w http.ResponseWriter, req *http.Request) {
 	}else {
 		w.WriteHeader(405)
 	}
-	//io.WriteString(w, GetId(obj_sl[0]))
 }
 
 func main() {
