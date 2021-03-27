@@ -11,7 +11,7 @@ func main() {
 	client := &http.Client{}
 	
 	var body bytes.Buffer
-	body.Write([]byte("\"action\":\"create\",\n\"object\":\"Teacher\",\n\"data\":{\n\"id\":\"001\",\n\"subject\":\"Math\",\n\"salary\":2345,\n\"classroom\":\"CL-001\",\n\"person\":{\n\"name\":\"Ivan\",\n\"surname\":\"Popov\",\n\"personalCode\":\"123422-43235\"\n}\n}"))
+	body.Write([]byte("{\n\"action\":\"create\",\n\"object\":\"Teacher\",\n\"data\":{\n\"id\":\"001\",\n\"subject\":\"Math\",\n\"salary\":2345,\n\"classroom\":\"CL-001\",\n\"person\":{\n\"name\":\"Ivan\",\n\"surname\":\"Popov\",\n\"personalCode\":\"123422-43235\"\n}\n}\n}"))
 	
 	req, err := http.NewRequest("POST", "http://localhost:8080/", &body)
 	resp, err := client.Do(req)
