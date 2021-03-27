@@ -50,13 +50,13 @@ var obj_sl []GeneralObject
 
 func GetId(o GeneralObject) string {
 	switch o.(type) {
-	case *Teacher:
+	case Teacher:
 		t := o.(Teacher)
 		return t.ID
-	case *Stuff:
+	case Stuff:
 		s := o.(Stuff)
 		return s.ID
-	case *Student:
+	case Student:
 		st := o.(Student)
 		return st.ID
 
@@ -362,51 +362,71 @@ func (action DeleteStudent) Process() {
 
 func Handler(w http.ResponseWriter, req *http.Request) {
 	var act Action
-	var obj GeneralObject
-	switch act.ObjName {
-	case "Teacher":
-		obj = &Teacher{}
-	case "Stuff":
-		obj = &Stuff{}
-	case "Student":
-		obj = &Student{}
-
-	}
 	var toDo DefinedAction
 	var toDor DefinedAction2
 	if req.Method == "GET" {
 		for i := 0; i < len(obj_sl); i++{
 			io.WriteString(w, GetId(obj_sl[i]))
-			io.WriteString(w,"/n")
+			fmt.Println(obj_sl[i])
+			fmt.Println(GetId(obj_sl[i]))
+			io.WriteString(w,"\n")
 		}
-		io.WriteString(w,"Bad ")
 	} else if req.Method == "POST" {
 		data, err := ioutil.ReadAll(req.Body)
 		req.Body.Close()
-		if err != nil {return }
-		
-		fmt.Printf("%s\n", data)
 		err = json.Unmarshal(data, &act)
 		if err != nil {
 			fmt.Println(err)
 			return
 		}
-		io.WriteString(w," POST ")
+		var obj GeneralObject
+		switch act.ObjName {
+			case "Teacher":
+				obj = &Teacher{}
+			case "Stuff":
+				obj = &Stuff{}
+			case "Student":
+				obj = &Student{}
+
+		}
+
+		if err != nil {return }
+	
 		switch act.Action {
 			case "create":
 				toDo = obj.GetCreateAction()
+				toDo.GetFromJSON(data)
 				toDo.Process()
-				//fmt.Println(obj_sl)
-				io.WriteString(w, GetId(obj_sl[0]))
-				io.WriteString(w," very Bad ")
 			case "read":
 				toDor = obj.GetReadAction()
+				toDor.GetFromJSON(data)
 				toDor.Process(w)
 		}
+
 	}else if req.Method == "PUT" {
+		data, err := ioutil.ReadAll(req.Body)
+		req.Body.Close()
+		err = json.Unmarshal(data, &act)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+		var obj GeneralObject
+		switch act.ObjName {
+			case "Teacher":
+				obj = &Teacher{}
+			case "Stuff":
+				obj = &Stuff{}
+			case "Student":
+				obj = &Student{}
+
+		}
+
+		if err != nil {return }
 		switch act.Action {
 			case "update":
 				toDo = obj.GetUpdateAction()
+				toDo.GetFromJSON(data)
 				toDo.Process()
 		}
 	}else {
